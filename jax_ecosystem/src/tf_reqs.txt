@@ -1,0 +1,8 @@
+tensorflow
+tensorflow_probability
+tensorflow_datasets
+tf-keras
+
+pandas
+matplotlib
+ipykernel
