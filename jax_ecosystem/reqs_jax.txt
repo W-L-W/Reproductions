@@ -1,6 +1,6 @@
 jax
 flax
-optak
+optax
 distrax
 
 tensorflow
