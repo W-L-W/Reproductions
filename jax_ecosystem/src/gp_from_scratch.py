@@ -19,19 +19,6 @@ class Kernel(ABC):
         """Returns the kernel matrix."""
         pass
 
-
-class Mean:
-    """Mean class."""
-
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def vector(self, x: Float[Array, "... n d"]) -> Float[Array, "... n"]:
-        """Returns the mean vector."""
-        pass
-
-
 class RBFKernel(Kernel):
     """RBF Kernel class."""
 
@@ -66,6 +53,41 @@ class ConditionedKernel(Kernel):
         K2 = self.parent_kernel(x2, x)
         return 
 
+class Mean(ABC):
+    """Mean class."""
+
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def vector(self, x: Float[Array, "... n d"]) -> Float[Array, "... n"]:
+        """Returns the mean vector."""
+        pass
+
+class ZeroMean(Mean):
+    """Mean of zero function"""
+    def vector(self.x: Float[Array, "... N D"]) -> Float[Array, "... n"]:
+        return jnp.zeros_like(x)
+
+class ConditionedMean(Mean):
+    """Kernel obtained from conditioning"""
+    def __init__(self, parent_kernel: Kernel, x: Float[Array, "... N D"]):
+        self.parent_kernel = parent_kernel
+        self.K = parent_kernel.matrix(x,x)
+        self.Km1 = jnp.linalg.inv
+        self.x = x
+
+    def matrix(
+        self, x1: Float[Array, "... N1 D"], x2: Float[Array, "... N2 D"]
+    ) -> Float[Array, "... N1 N2"]:
+        K12 = self.parent_kernel(x1, x2)
+        K1 = self.parent_kernel(x1, x)
+        K2 = self.parent_kernel(x2, x)
+        return 
+
+
+
+
 class GP:
     """Gaussian Process class."""
 
@@ -75,8 +97,7 @@ class GP:
 
     def condition(self, x: Float[Array, "... n d"], y: Float[Array, "... n"]):
         """Returns a GP defined by conditioning"""
-        K11 = self.kernel.matrix(x,x)
-        def create_matrix(x1, x2):
+        conditioned_kernel = 
 
 
 
