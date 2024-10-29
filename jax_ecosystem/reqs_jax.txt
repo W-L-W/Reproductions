@@ -1,0 +1,18 @@
+jax
+flax
+optak
+distrax
+
+tensorflow
+tensorflow_probability
+tensorflow_datasets
+tf-keras
+
+pandas
+matplotlib
+ipykernel
+
+jaxtyping
+einops
+treescope 
+# nice jax printing
