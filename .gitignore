@@ -6,3 +6,5 @@ jax_ecosystem/local_conda_env
 torch_ecosystem/venv
 jax_ecosystem/venv
 **/*venv*
+
+**/*__pycache__*
