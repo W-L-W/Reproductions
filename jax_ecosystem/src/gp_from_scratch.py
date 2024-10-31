@@ -1,7 +1,7 @@
 """GP"""
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, TypeVar
+from typing import Any, Callable, Dict, Iterable, TypeVar
 
 import jax
 import jax.numpy as jnp
@@ -154,14 +154,16 @@ def run_lbfgs(init_params, fun, opt, max_iter, tol):
   return final_params, final_state
 
 
+Params = TypeVar('param_space', bound=Dict[str, Any])
+  
 class ParametrisedGP(ABC):
     """Hierarchical Gaussian Process"""
-    Params = TypeVar('param_space', bound=Dict[str, Any])
 
     def __init__(self, param_log_prob: Callable[[Params], Float], spawn: Callable[[Params], GP], initializer: Callable[[r.PRNGKey], Params]):  
         """Note that log probabilities are un-normalised in general!"""
         self.param_log_prob = param_log_prob
         self.spawn = spawn
+        self.initializer = initializer
     
     def compute_map_params_lbfgs(self, key: r.PRNGKey, max_iter: int = 1000, tol: float = 1e-6):
         opt = ox.lbfgs()
@@ -174,12 +176,23 @@ class ParametrisedGP(ABC):
         )
         return final_params
     
+    def sample_map(self, key: r.PRNGKey, max_iter: int = 1000, tol: float = 1e-6):
+        params = self.compute_map_params_lbfgs(key, max_iter, tol)
+        return self.spawn(params)
+    
+    
     def condition(self, x: Float[Array, "... N D"], y: Float[Array, "... N"]):
         """Returns the corresponding ParametrisedGP defined by conditioning"""
         # first get an updated log_prob
         def updated_log_prob(params):
             gp = self.spawn(params)
+            # print('GP log_prob', gp.log_prob(x, y))
+            # print('param log_prob', self.param_log_prob(params))
             return gp.log_prob(x, y) + self.param_log_prob(params)
+        
+        # def updated_log_prob(params: Iterable[Params]):
+        #     """Vectorized version"""
+        #     return jax.vmap(updated_log_prob_scalar)(params)
         
         # then get an updated spawn method using conditioning each spawned GP
         def updated_spawn(params):
