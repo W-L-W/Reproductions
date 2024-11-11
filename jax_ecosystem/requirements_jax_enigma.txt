@@ -1,0 +1,19 @@
+jaxlib==0.4.7+cuda11.cudnn82
+jax==0.4.7
+flax
+optax
+distrax
+
+tensorflow
+tensorflow_probability
+tensorflow_datasets
+tf-keras
+
+pandas
+matplotlib
+ipykernel
+
+jaxtyping
+einops
+treescope 
+# nice jax printing

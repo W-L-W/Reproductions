@@ -13,7 +13,7 @@ import einops as eo
 
 # Constants
 # These were included as numerical quantities in the original notebook
-NUM_TARGETS_EVAL_MODE = 400
+NUM_TARGETS_EVAL_MODE = 50
 X_MIN = -2.0
 X_MAX = 2.0
 
@@ -92,7 +92,10 @@ class GPCurvesReader:
     def generate_regression_instance(
         self, eval_mode: bool = False, *, key: jr.PRNGKey
     ) -> CNPRegressionInstance:
-        """Returns regression instance."""
+        """Returns regression instance.
+        This has a batch dimension of size `batch_size`; each sample in the batch has the same
+        combined set of input (x) values, but different randomly generated target (y) values.
+        """
         key_num_samples, key_x, key_y = jr.split(key, num=3)
 
         num_context, num_target, num_total = self._sample_split_sizes(
@@ -115,10 +118,6 @@ class GPCurvesReader:
         )
         y_values = eo.rearrange(y_values_flat, "b n -> b n 1")
 
-        # the gpx infrastructure does not support batching; we need to implement this manually via a vmap
-
-        print(f"x_values.shape: {x_values.shape}")
-        print(f"y_values.shape: {y_values.shape}")
         # Split into context and target
         context_x = x_values[:, :num_context, :]
         context_y = y_values[:, :num_context, :]
@@ -211,7 +210,6 @@ class Decoder:
         """Decodes individual targets."""
         # concatenate represenation with each target along the feature dimension
         # first to specify tiling shape need to read batch dimensions for target_x
-        print(representation.shape, target_x.shape)
         nt = target_x.shape[-2]
 
         tiled_representation = jnp.tile(
@@ -264,15 +262,20 @@ def plot_functions(
     # check that dimensionality of input output space is in fact 1
     msg = "Only 1D input and output space supported for this plotting utility"
     assert (query.context_x.shape[-1] == 1) and (query.target_x.shape[-1] == 1), msg
-    xc = query.context_x[0, :, 0]
-    yc = query.context_y[0, :, 0]
-    xt = query.target_x[0, :, 0]
-    yt = target_y[0, :, 0]
-    ym = pred_y_mean[0, :, 0]
-    ys = pred_y_std[0, :, 0]
+    # Sort context points
+    sorted_context_indices = jnp.argsort(query.context_x[0, :, 0])
+    xc = query.context_x[0, sorted_context_indices, 0]
+    yc = query.context_y[0, sorted_context_indices, 0]
+
+    # Sort target points
+    sorted_target_indices = jnp.argsort(query.target_x[0, :, 0])
+    xt = query.target_x[0, sorted_target_indices, 0]
+    yt = target_y[0, sorted_target_indices, 0]
+    ym = pred_y_mean[0, sorted_target_indices, 0]
+    ys = pred_y_std[0, sorted_target_indices, 0]
 
     plt.plot(xt, ym, "b", linewidth=2, label="Mean")
-    plt.plot(xt, yt, "k:", linewidth=2, label="Target points")
+    plt.plot(xt, yt, "kx", linewidth=2, label="Target points")
     plt.plot(xc, yc, "ko", markersize=10, label="Context points")
     plt.fill_between(xt, ym - ys, ym + ys, alpha=0.2, color="blue", interpolate=True)
 
@@ -280,5 +283,6 @@ def plot_functions(
     # plt.yticks([X_MIN, 0, X_MAX], fontsize=16)
     plt.grid("off")
     ax = plt.gca()
-    ax.set_axis_bgcolor("white")
+    # ax.set_axis_bgcolor("white")
+    ax.legend()
     plt.show()
