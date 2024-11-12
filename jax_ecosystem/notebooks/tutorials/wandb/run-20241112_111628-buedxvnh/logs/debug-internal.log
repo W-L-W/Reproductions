@@ -1,0 +1,17 @@
+{"time":"2024-11-12T11:16:28.88023515Z","level":"INFO","msg":"using version","core version":"0.18.6"}
+{"time":"2024-11-12T11:16:28.880271527Z","level":"INFO","msg":"created symlink","path":"/scratch/ww347/projects/Reproductions/jax_ecosystem/notebooks/tutorials/wandb/run-20241112_111628-buedxvnh/logs/debug-core.log"}
+{"time":"2024-11-12T11:16:28.990620706Z","level":"INFO","msg":"created new stream","id":"buedxvnh"}
+{"time":"2024-11-12T11:16:28.990708263Z","level":"INFO","msg":"stream: started","id":"buedxvnh"}
+{"time":"2024-11-12T11:16:28.990861794Z","level":"INFO","msg":"sender: started","stream_id":"buedxvnh"}
+{"time":"2024-11-12T11:16:28.990856067Z","level":"INFO","msg":"handler: started","stream_id":{"value":"buedxvnh"}}
+{"time":"2024-11-12T11:16:28.990853046Z","level":"INFO","msg":"writer: Do: started","stream_id":{"value":"buedxvnh"}}
+{"time":"2024-11-12T11:16:29.294986881Z","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-12T11:16:39.202779434Z","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-12T11:16:39.204003423Z","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-12T11:16:40.203503039Z","level":"INFO","msg":"handler: operation stats","stats":{"operations":[{"desc":"saving job artifact","runtime_seconds":0.847694621,"subtasks":[{"desc":"requirements.frozen.txt","runtime_seconds":0.246029002,"progress":"2.8KB/2.8KB"}]}],"total_operations":1}}
+{"time":"2024-11-12T11:16:41.48867117Z","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-12T11:16:42.720236145Z","level":"INFO","msg":"stream: closing","id":"buedxvnh"}
+{"time":"2024-11-12T11:16:42.720288099Z","level":"INFO","msg":"handler: closed","stream_id":{"value":"buedxvnh"}}
+{"time":"2024-11-12T11:16:42.720322806Z","level":"INFO","msg":"writer: Close: closed","stream_id":{"value":"buedxvnh"}}
+{"time":"2024-11-12T11:16:42.720390644Z","level":"INFO","msg":"sender: closed","stream_id":"buedxvnh"}
+{"time":"2024-11-12T11:16:42.72047942Z","level":"INFO","msg":"stream: closed","id":"buedxvnh"}

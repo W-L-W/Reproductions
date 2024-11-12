@@ -5,7 +5,7 @@ numpy
 opt_einsum
 scipy
 scikit-learn
-pytorch
+torch
 torchvision
 tqdm
 pandas
@@ -13,3 +13,4 @@ matplotlib
 seaborn
 plotly
 #ipykernel ipython jupyter numpy opt-einsum scipyscikit-learn torch torchvision tqdm pandas matplotlib seaborn plotly
+wandb

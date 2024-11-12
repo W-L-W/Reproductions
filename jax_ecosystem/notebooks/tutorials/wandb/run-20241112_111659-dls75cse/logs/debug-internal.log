@@ -1,0 +1,17 @@
+{"time":"2024-11-12T11:16:59.623187146Z","level":"INFO","msg":"using version","core version":"0.18.6"}
+{"time":"2024-11-12T11:16:59.623225504Z","level":"INFO","msg":"created symlink","path":"/scratch/ww347/projects/Reproductions/jax_ecosystem/notebooks/tutorials/wandb/run-20241112_111659-dls75cse/logs/debug-core.log"}
+{"time":"2024-11-12T11:16:59.734220175Z","level":"INFO","msg":"created new stream","id":"dls75cse"}
+{"time":"2024-11-12T11:16:59.734315227Z","level":"INFO","msg":"stream: started","id":"dls75cse"}
+{"time":"2024-11-12T11:16:59.734589919Z","level":"INFO","msg":"sender: started","stream_id":"dls75cse"}
+{"time":"2024-11-12T11:16:59.734390559Z","level":"INFO","msg":"writer: Do: started","stream_id":{"value":"dls75cse"}}
+{"time":"2024-11-12T11:16:59.734460702Z","level":"INFO","msg":"handler: started","stream_id":{"value":"dls75cse"}}
+{"time":"2024-11-12T11:16:59.984391187Z","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-12T11:17:02.003831429Z","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-12T11:17:02.004691141Z","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-12T11:17:02.724933176Z","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-12T11:17:02.909220765Z","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2024-11-12T11:17:03.937406009Z","level":"INFO","msg":"stream: closing","id":"dls75cse"}
+{"time":"2024-11-12T11:17:03.937461452Z","level":"INFO","msg":"handler: closed","stream_id":{"value":"dls75cse"}}
+{"time":"2024-11-12T11:17:03.937501046Z","level":"INFO","msg":"writer: Close: closed","stream_id":{"value":"dls75cse"}}
+{"time":"2024-11-12T11:17:03.93752361Z","level":"INFO","msg":"sender: closed","stream_id":"dls75cse"}
+{"time":"2024-11-12T11:17:03.937675785Z","level":"INFO","msg":"stream: closed","id":"dls75cse"}

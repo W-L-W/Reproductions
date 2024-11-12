@@ -17,3 +17,6 @@ jaxtyping
 einops
 treescope 
 # nice jax printing
+
+# tracking etc
+wandb
