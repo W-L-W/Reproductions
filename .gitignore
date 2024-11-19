@@ -8,5 +8,5 @@ jax_ecosystem/venv
 **/*venv*
 
 **/*__pycache__*
-
+**/wandb
 jaxlib*
