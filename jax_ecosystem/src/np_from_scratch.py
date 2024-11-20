@@ -6,7 +6,6 @@ import flax.nnx as nnx
 from jaxtyping import Array, Float
 import distrax as dx
 from typing import NamedTuple
-import gpjax as gpx
 import matplotlib.pyplot as plt
 import einops as eo
 
@@ -29,6 +28,105 @@ class CNPRegressionInstance(NamedTuple):
     target_y: Float[Array, "... nt dim_y"]
 
 
+# class GPCurvesReaderOld:
+#     """Generates curves using a Gaussian Process (GP).
+#     Supports vector inputs (x) and vector outputs (y).
+#     """
+
+#     def __init__(
+#         self,
+#         batch_size: int,
+#         max_num_context: int,
+#         x_dim=1,
+#         y_dim: int = 1,
+#         lengthscale: float = 0.4,
+#         sigma_scale: float = 1.0,
+#         sigma_noise: float = 0.1,
+#     ):
+#         """Creates a regression dataset of functions sampled from a GP.
+#         Args:
+#           batch_size: An integer.
+#           max_num_context: The max number of observations in the context.
+#           x_dim: Dimension of input space.
+#           y_dim: Dimension of output space.
+#           lengthscale: Float, the lengthscale of the RBF kernel in input space.
+#           sigma_scale: Float, the scale of standard deviation in the prior
+#           sigma_noise: Float, the scale of the observation noise.
+#         """
+#         self._batch_size = batch_size
+#         self._max_num_context = max_num_context
+#         self._x_dim = x_dim
+#         self._y_dim = y_dim
+#         self._lengthscale = lengthscale
+#         self._sigma_scale = sigma_scale
+#         self._sigma_noise = sigma_noise
+
+#         kernel = gpx.kernels.RBF(
+#             lengthscale=self._lengthscale,
+#             variance=self._sigma_scale**2,
+#             n_dims=self._x_dim,
+#         )
+#         mean = gpx.mean_functions.Zero()
+#         self.prior = gpx.gps.Prior(mean_function=mean, kernel=kernel)
+
+#     def _sample_split_sizes(self, eval_mode: bool = False, *, key: jr.PRNGKey):
+#         """Determine number of context and target points for regression instance."""
+#         context_key, target_key = jr.split(key, num=2)
+#         num_context = int(
+#             jr.uniform(
+#                 context_key, shape=(), minval=3, maxval=self._max_num_context + 1
+#             )
+#         )
+#         if eval_mode:
+#             num_target = NUM_TARGETS_EVAL_MODE
+#         else:
+#             num_target = int(
+#                 jr.uniform(
+#                     target_key, shape=(), minval=2, maxval=self._max_num_context + 1
+#                 )
+#             )
+#         num_total = num_context + num_target
+#         return num_context, num_target, num_total
+
+#     def generate_regression_instance(
+#         self, eval_mode: bool = False, *, key: jr.PRNGKey
+#     ) -> CNPRegressionInstance:
+#         """Returns regression instance.
+#         This has a batch dimension of size `batch_size`; each sample in the batch has the same
+#         combined set of input (x) values, but different randomly generated target (y) values.
+#         """
+#         key_num_samples, key_x, key_y = jr.split(key, num=3)
+
+#         num_context, num_target, num_total = self._sample_split_sizes(
+#             eval_mode=eval_mode, key=key_num_samples
+#         )
+#         # Each sample is from a distribution whose coordinates are independent uniforms
+#         shared_x_values = jr.uniform(
+#             key=key_x,
+#             shape=(num_total, self._x_dim),
+#             minval=X_MIN,
+#             maxval=X_MAX,
+#         )
+#         # Sample from the GP
+#         y_dist = self.prior.predict(shared_x_values)
+#         y_values_flat = y_dist.sample(seed=key_y, sample_shape=(self._batch_size,))
+
+#         # Reshape the samples
+#         x_values = jnp.tile(
+#             eo.rearrange(shared_x_values, "n d -> 1 n d"), reps=(self._batch_size, 1, 1)
+#         )
+#         y_values = eo.rearrange(y_values_flat, "b n -> b n 1")
+
+#         # Split into context and target
+#         context_x = x_values[:, :num_context, :]
+#         context_y = y_values[:, :num_context, :]
+#         target_x = x_values[:, num_context:, :]
+#         target_y = y_values[:, num_context:, :]
+
+#         query = Query(context_x=context_x, context_y=context_y, target_x=target_x)
+#         return CNPRegressionInstance(query=query, target_y=target_y)
+
+
 class GPCurvesReader:
     """Generates curves using a Gaussian Process (GP).
     Supports vector inputs (x) and vector outputs (y).
@@ -43,6 +141,7 @@ class GPCurvesReader:
         lengthscale: float = 0.4,
         sigma_scale: float = 1.0,
         sigma_noise: float = 0.1,
+        jitter: float = 1e-6,
     ):
         """Creates a regression dataset of functions sampled from a GP.
         Args:
@@ -61,14 +160,29 @@ class GPCurvesReader:
         self._lengthscale = lengthscale
         self._sigma_scale = sigma_scale
         self._sigma_noise = sigma_noise
+        self._sigma_noise_jittered = max(sigma_noise, jitter * sigma_scale)
 
-        kernel = gpx.kernels.RBF(
-            lengthscale=self._lengthscale,
-            variance=self._sigma_scale**2,
-            n_dims=self._x_dim,
+    def _mvn(self, shared_x_values: Float[Array, "n d"]) -> dx.MultivariateNormalTri:
+        """Return multivariate normal with mean 0 and covariance from RBF kernel.
+        (Could use cola, but simpler to go direct for now)"""
+        n = shared_x_values.shape[0]
+        K = jnp.exp(
+            -0.5
+            * jnp.square(
+                jnp.linalg.norm(
+                    shared_x_values[:, None, :] - shared_x_values[None, :, :],
+                    axis=-1,
+                )
+                / self._lengthscale
+            )
         )
-        mean = gpx.mean_functions.Zero()
-        self.prior = gpx.gps.Prior(mean_function=mean, kernel=kernel)
+
+        scaled_K = K + jnp.eye(n) * self._sigma_noise_jittered**2
+
+        return dx.MultivariateNormalTri(
+            loc=jnp.zeros(n),
+            scale_tri=jnp.linalg.cholesky(scaled_K),
+        )
 
     def _sample_split_sizes(self, eval_mode: bool = False, *, key: jr.PRNGKey):
         """Determine number of context and target points for regression instance."""
@@ -98,7 +212,7 @@ class GPCurvesReader:
         """
         key_num_samples, key_x, key_y = jr.split(key, num=3)
 
-        num_context, num_target, num_total = self._sample_split_sizes(
+        num_context, _, num_total = self._sample_split_sizes(
             eval_mode=eval_mode, key=key_num_samples
         )
         # Each sample is from a distribution whose coordinates are independent uniforms
@@ -109,7 +223,7 @@ class GPCurvesReader:
             maxval=X_MAX,
         )
         # Sample from the GP
-        y_dist = self.prior.predict(shared_x_values)
+        y_dist = self._mvn(shared_x_values)
         y_values_flat = y_dist.sample(seed=key_y, sample_shape=(self._batch_size,))
 
         # Reshape the samples
